@@ -36,7 +36,6 @@ class Branch
     /**
      * @var string
      *
-     * @todo unique=true
      * @ORM\Column(type="string", length=12, nullable=true)
      * @Serializer\Groups("publish_vacancy")
      */
