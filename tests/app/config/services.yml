@@ -1,0 +1,6 @@
+services:
+  tree_house.entity_merger:
+    class: TreeHouse\EntityMerger\EntityMerger
+    arguments:
+      - @jms_serializer
+      - @doctrine
