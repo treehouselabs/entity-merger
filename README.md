@@ -3,6 +3,10 @@ Entity Merger
 
 **Entity Merger** is a library that can merge two entities.
 
+[![Build Status](https://travis-ci.org/treehouselabs/entity-merger.svg?branch=master)](https://travis-ci.org/treehouselabs/entity-merger)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/treehouselabs/entity-merger/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/treehouselabs/entity-merger/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/treehouselabs/entity-merger/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/treehouselabs/entity-merger/?branch=master)
+
 Usage
 =====
 
