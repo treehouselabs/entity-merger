@@ -8,7 +8,7 @@ Usage
 
 Define as a service:
 
-``yaml
+```yaml
 tree_house.entity_merger:
     class: TreeHouse\EntityMerger\EntityMerger
     arguments:
