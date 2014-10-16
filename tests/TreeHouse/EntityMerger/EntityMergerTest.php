@@ -37,9 +37,10 @@ class EntityMergerTest extends WebTestCase
         $update->setTitle('update');
         $update->setBody('update body');
 
-        $expected = clone $original;
+        $expected = new Vacancy();
         $expected->setTitle('update');
         $expected->setBody('update body');
+        $expected->setBranch($branch1);
 
         /** @var Vacancy $new */
         $new = $this->merger->merge($original, $update);
@@ -119,13 +120,32 @@ class EntityMergerTest extends WebTestCase
         $update->addBranch($branch1);
         $update->setHeadBranch($branch1);
 
-        $expected = clone $original;
+        $expected = new Company();
         $expected->setTitle('update');
         $expected->addBranch($branch1);
         $expected->setHeadBranch($branch1);
 
         /** @var Vacancy $new */
         $new = $this->merger->merge($original, $update);
+
+        $this->assertEquals($expected, $new);
+    }
+
+    public function testMergeAssociationsDoesNotCauseDuplicates()
+    {
+        $ft1 = new FunctionTag();
+        $ft1->getTitle('title 1');
+
+        $original = new Vacancy();
+        $original->addFunctionTag($ft1);
+
+        $update = new Vacancy();
+        $update->addFunctionTag($ft1);
+
+        $expected = new Vacancy();
+        $expected->addFunctionTag($ft1); // test it still has one function tag, instead of two
+
+        $new = $this->merger->merge($original, $expected);
 
         $this->assertEquals($expected, $new);
     }

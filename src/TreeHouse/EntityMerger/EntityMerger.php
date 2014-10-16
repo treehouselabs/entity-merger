@@ -93,6 +93,7 @@ class EntityMerger
                     $mergeCol = $value;
 
                     $managedCol = $prop->getValue($original);
+                    $managedColWasEmtpy = false;
                     if (!$managedCol) {
                         $managedCol = new PersistentCollection($em,
                             $em->getClassMetadata($assoc2['targetEntity']),
@@ -101,6 +102,8 @@ class EntityMerger
                         $managedCol->setOwner($original, $assoc2);
                         $prop->setValue($original, $managedCol);
                         $uow->setOriginalEntityProperty($oid, $name, $managedCol);
+
+                        $managedColWasEmtpy = true;
                     } else {
                         // cleanup items no longer in the source. We do it this way instead of a
                         // $collection->clear() and re-adding, because that would trigger
@@ -114,17 +117,23 @@ class EntityMerger
                         // now we can clear safely
                         if ($managedCol->count() === 0) {
                             $managedCol->clear();
+
+                            $managedColWasEmtpy = true;
                         }
                     }
 
                     foreach ($mergeCol as $subvalue) {
-                        $managedCol->add($subvalue);
-                        if (! $assoc2['isOwningSide']) {
-                            $class2 = $em->getClassMetadata($assoc2['targetEntity']);
-                            $prop2 = $class2->reflClass->getProperty($assoc2['mappedBy']);
-                            $prop2->setAccessible(true);
+                        // if the collection was empty we can add all, otherwise check that the item isn't already there
+                        if ($managedColWasEmtpy || false === $this->inTraversable($subvalue, $managedCol)) {
+                            $managedCol->add($subvalue);
 
-                            $prop2->setValue($subvalue, $original);
+                            if (! $assoc2['isOwningSide']) {
+                                $class2 = $em->getClassMetadata($assoc2['targetEntity']);
+                                $prop2 = $class2->reflClass->getProperty($assoc2['mappedBy']);
+                                $prop2->setAccessible(true);
+
+                                $prop2->setValue($subvalue, $original);
+                            }
                         }
                     }
                 }
