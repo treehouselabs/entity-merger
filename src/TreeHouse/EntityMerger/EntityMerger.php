@@ -36,7 +36,7 @@ class EntityMerger
         $this->doctrine        = $doctrine;
     }
 
-    public function doMerge($original, $update, SerializationContext $context = null, ExclusionStrategyInterface $exclusionStrategy = null)
+    public function doMerge($original, $update, SerializationContext $context = null, ExclusionStrategyInterface $exclusionStrategy = null, $mergeNullValues = false)
     {
         /** @var EntityManager $em */
         $em = $this->doctrine->getManager();
@@ -57,7 +57,7 @@ class EntityMerger
             $prop->setAccessible(true);
             $value = $prop->getValue($update);
 
-            if (is_null($value)) {
+            if (false === $mergeNullValues && is_null($value)) {
                 continue;
             }
 
@@ -156,15 +156,16 @@ class EntityMerger
      * Merges two entities. The entities can be of a different class, as long as property names match, they will be
      * merged.
      *
-     * @param object       $original The original entity to merge into
-     * @param object|array $update   The update entity from which values will be merged into the original. Arrays will be deserialized first
-     * @param array        $groups   JMS\Serializer groups used for exclusion strategy
+     * @param object       $original        The original entity to merge into
+     * @param object|array $update          The update entity from which values will be merged into the original. Arrays will be deserialized first
+     * @param array        $groups          JMS\Serializer groups used for exclusion strategy
+     * @param bool         $mergeNullValues Merge values even when they are null
      *
      * @throws \InvalidArgumentException
      *
      * @return object
      */
-    public function merge($original, $update, $groups = [])
+    public function merge($original, $update, $groups = [], $mergeNullValues = false)
     {
         if (is_array($update)) {
             $update = $this->serializer->deserialize(json_encode($update), get_class($original), 'json');
@@ -182,7 +183,7 @@ class EntityMerger
             $exclusionStrategy = new GroupsExclusionStrategy($groups);
         }
 
-        return $this->doMerge($original, $update, $context, $exclusionStrategy);
+        return $this->doMerge($original, $update, $context, $exclusionStrategy, $mergeNullValues);
     }
 
     /**

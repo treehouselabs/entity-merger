@@ -149,4 +149,19 @@ class EntityMergerTest extends WebTestCase
 
         $this->assertEquals($expected, $new);
     }
+
+    public function testMergeNullValues()
+    {
+        $original = new Vacancy();
+        $original->setTitle('Test');
+
+        $update = new Vacancy();
+        $update->setTitle(null);
+
+        $expected = new Vacancy();
+
+        $result = $this->merger->merge($original, $update, [], true);
+
+        $this->assertEquals($expected, $result);
+    }
 }
