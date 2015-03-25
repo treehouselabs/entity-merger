@@ -145,7 +145,7 @@ class EntityMergerTest extends WebTestCase
         $expected = new Vacancy();
         $expected->addFunctionTag($ft1); // test it still has one function tag, instead of two
 
-        $new = $this->merger->merge($original, $expected);
+        $new = $this->merger->merge($original, $update);
 
         $this->assertEquals($expected, $new);
     }

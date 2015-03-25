@@ -36,7 +36,7 @@ class EntityMerger
         $this->doctrine        = $doctrine;
     }
 
-    public function doMerge($original, $update, SerializationContext $context = null, ExclusionStrategyInterface $exclusionStrategy = null, $mergeNullValues = false)
+    protected function doMerge($original, $update, SerializationContext $context = null, ExclusionStrategyInterface $exclusionStrategy = null, $mergeNullValues = false)
     {
         /** @var EntityManager $em */
         $em = $this->doctrine->getManager();
