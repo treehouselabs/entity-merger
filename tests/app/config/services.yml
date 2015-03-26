@@ -4,3 +4,4 @@ services:
     arguments:
       - @jms_serializer
       - @doctrine
+      - @jms_serializer.metadata_factory

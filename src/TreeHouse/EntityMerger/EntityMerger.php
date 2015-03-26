@@ -9,9 +9,9 @@ use Doctrine\ORM\PersistentCollection;
 use Doctrine\ORM\Proxy\Proxy;
 use Doctrine\ORM\UnitOfWork;
 use JMS\Serializer\Exclusion\ExclusionStrategyInterface;
-use JMS\Serializer\Exclusion\GroupsExclusionStrategy;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
+use Metadata\MetadataFactory;
 use Symfony\Bridge\Doctrine\ManagerRegistry as Doctrine;
 
 class EntityMerger
@@ -27,16 +27,22 @@ class EntityMerger
     protected $serializer;
 
     /**
+     * @var MetadataFactory
+     */
+    protected $metadataFactory;
+
+    /**
      * @param SerializerInterface $serializer
      * @param Doctrine            $doctrine
      */
-    public function __construct(SerializerInterface $serializer, Doctrine $doctrine)
+    public function __construct(SerializerInterface $serializer, Doctrine $doctrine, MetadataFactory $metadataFactory)
     {
         $this->serializer      = $serializer;
         $this->doctrine        = $doctrine;
+        $this->metadataFactory = $metadataFactory;
     }
 
-    public function doMerge($original, $update, SerializationContext $context = null, ExclusionStrategyInterface $exclusionStrategy = null)
+    protected function doMerge($original, $update, SerializationContext $context = null, ExclusionStrategyInterface $exclusionStrategy = null, $mergeNullValues = false)
     {
         /** @var EntityManager $em */
         $em = $this->doctrine->getManager();
@@ -46,10 +52,13 @@ class EntityMerger
 
         $class = $em->getClassMetadata(get_class($original));
 
+        $classMeta = $this->metadataFactory->getMetadataForClass(get_class($original));
+
         // Merge state of $entity into existing (managed) entity
         foreach ($class->reflClass->getProperties() as $prop) {
             // see if it should be skipped according to the specified group(s)
-            if ($exclusionStrategy && $context && $exclusionStrategy->shouldSkipProperty($update, $context)) {
+            $metaProp = $classMeta->propertyMetadata[$prop->getName()];
+            if ($exclusionStrategy && $context && $exclusionStrategy->shouldSkipProperty($metaProp, $context)) {
                 continue;
             }
 
@@ -57,7 +66,7 @@ class EntityMerger
             $prop->setAccessible(true);
             $value = $prop->getValue($update);
 
-            if (is_null($value)) {
+            if (false === $mergeNullValues && is_null($value)) {
                 continue;
             }
 
@@ -109,7 +118,7 @@ class EntityMerger
                         // $collection->clear() and re-adding, because that would trigger
                         // an orphanRemoval and cause the item to be removed
                         foreach ($managedCol as $item) {
-                            if (false === $this->inTraversable($item, $mergeCol)) {
+                            if (null === $mergeCol || false === $this->inTraversable($item, $mergeCol)) {
                                 $managedCol->removeElement($item);
                             }
                         }
@@ -122,17 +131,19 @@ class EntityMerger
                         }
                     }
 
-                    foreach ($mergeCol as $subvalue) {
-                        // if the collection was empty we can add all, otherwise check that the item isn't already there
-                        if ($managedColWasEmtpy || false === $this->inTraversable($subvalue, $managedCol)) {
-                            $managedCol->add($subvalue);
+                    if ($mergeCol) {
+                        foreach ($mergeCol as $subvalue) {
+                            // if the collection was empty we can add all, otherwise check that the item isn't already there
+                            if ($managedColWasEmtpy || false === $this->inTraversable($subvalue, $managedCol)) {
+                                $managedCol->add($subvalue);
 
-                            if (! $assoc2['isOwningSide']) {
-                                $class2 = $em->getClassMetadata($assoc2['targetEntity']);
-                                $prop2 = $class2->reflClass->getProperty($assoc2['mappedBy']);
-                                $prop2->setAccessible(true);
+                                if (!$assoc2['isOwningSide']) {
+                                    $class2 = $em->getClassMetadata($assoc2['targetEntity']);
+                                    $prop2 = $class2->reflClass->getProperty($assoc2['mappedBy']);
+                                    $prop2->setAccessible(true);
 
-                                $prop2->setValue($subvalue, $original);
+                                    $prop2->setValue($subvalue, $original);
+                                }
                             }
                         }
                     }
@@ -156,15 +167,16 @@ class EntityMerger
      * Merges two entities. The entities can be of a different class, as long as property names match, they will be
      * merged.
      *
-     * @param object       $original The original entity to merge into
-     * @param object|array $update   The update entity from which values will be merged into the original. Arrays will be deserialized first
-     * @param array        $groups   JMS\Serializer groups used for exclusion strategy
+     * @param object       $original        The original entity to merge into
+     * @param object|array $update          The update entity from which values will be merged into the original. Arrays will be deserialized first
+     * @param array        $groups          JMS\Serializer groups used for exclusion strategy
+     * @param bool         $mergeNullValues Merge values even when they are null
      *
      * @throws \InvalidArgumentException
      *
      * @return object
      */
-    public function merge($original, $update, $groups = [])
+    public function merge($original, $update, ExclusionStrategyInterface $exclusionStrategy = null, $mergeNullValues = false)
     {
         if (is_array($update)) {
             $update = $this->serializer->deserialize(json_encode($update), get_class($original), 'json');
@@ -177,12 +189,8 @@ class EntityMerger
         }
 
         $context = SerializationContext::create();
-        $exclusionStrategy = null;
-        if (!empty($groups)) {
-            $exclusionStrategy = new GroupsExclusionStrategy($groups);
-        }
 
-        return $this->doMerge($original, $update, $context, $exclusionStrategy);
+        return $this->doMerge($original, $update, $context, $exclusionStrategy, $mergeNullValues);
     }
 
     /**
