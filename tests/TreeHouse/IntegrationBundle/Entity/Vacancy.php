@@ -43,6 +43,16 @@ class Vacancy
     protected $body;
 
     /**
+     * Excluded vacancy
+     *
+     * @var string
+     *
+     * @ORM\Column(type="integer", nullable=true)
+     * @Serializer\Exclude
+     */
+    protected $excluded;
+
+    /**
      * @var Branch The branch of a Company
      *
      * @ORM\ManyToOne(targetEntity="Branch", inversedBy="vacancies")
@@ -147,6 +157,26 @@ class Vacancy
     public function getBody()
     {
         return $this->body;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExcluded()
+    {
+        return $this->excluded;
+    }
+
+    /**
+     * @param string $excluded
+     *
+     * @return Vacancy
+     */
+    public function setExcluded($excluded)
+    {
+        $this->excluded = $excluded;
+
+        return $this;
     }
 
     /**

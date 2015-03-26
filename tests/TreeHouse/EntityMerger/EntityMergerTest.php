@@ -292,4 +292,20 @@ class EntityMergerTest extends WebTestCase
 
         $this->assertEquals($expected, $result);
     }
+
+    public function testMergeSerializerExcludedField()
+    {
+        $original = new Vacancy();
+        $original->setExcluded(true);
+
+        $update = new Vacancy();
+        $update->setExcluded(false);
+
+        $expected = new Vacancy();
+        $expected->setExcluded(false);
+
+        $result = $this->merger->merge($original, $update);
+
+        $this->assertEquals($expected, $result);
+    }
 }
