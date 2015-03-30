@@ -1,3 +1,9 @@
+## 2.0.1 - 2015-03-26
+
+### Fixed
+
+* notice when entities had excluded properties for the serializer
+
 ## 2.0.0 - 2015-03-26
 
 ### Changed

@@ -57,9 +57,11 @@ class EntityMerger
         // Merge state of $entity into existing (managed) entity
         foreach ($class->reflClass->getProperties() as $prop) {
             // see if it should be skipped according to the specified group(s)
-            $metaProp = $classMeta->propertyMetadata[$prop->getName()];
-            if ($exclusionStrategy && $context && $exclusionStrategy->shouldSkipProperty($metaProp, $context)) {
-                continue;
+            if (isset($classMeta->propertyMetadata[$prop->getName()])) {
+                $metaProp = $classMeta->propertyMetadata[$prop->getName()];
+                if ($exclusionStrategy && $context && $exclusionStrategy->shouldSkipProperty($metaProp, $context)) {
+                    continue;
+                }
             }
 
             $name = $prop->name;
