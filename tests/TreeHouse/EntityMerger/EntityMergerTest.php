@@ -308,4 +308,23 @@ class EntityMergerTest extends WebTestCase
 
         $this->assertEquals($expected, $result);
     }
+
+    public function testMergeNormalizesDateTimes()
+    {
+        $available = new \DateTime('2015-08-15', new DateTimeZone('UTC'));
+
+        $original = new Vacancy();
+        $original->setDatetimeAvailable($available);
+
+        $update = new Vacancy();
+        $update->setDatetimeAvailable(new \DateTime('2015-08-15', new DateTimeZone('+00:00'))); // mind the timezone
+
+        $expected = new Vacancy();
+        $expected->setDatetimeAvailable($available);
+
+        $result = $this->merger->merge($original, $update);
+
+        $this->assertSame($original->getDatetimeAvailable(), $available);
+        $this->assertEquals($expected, $result);
+    }
 }

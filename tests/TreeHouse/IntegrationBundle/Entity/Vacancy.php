@@ -85,6 +85,17 @@ class Vacancy
     protected $functionTags;
 
     /**
+     * datetime the vacancy is published/found/opened
+     * Indicates when the applicant can start on the job
+     *
+     * @var \DateTime
+     *
+     * @ORM\Column(type="datetime")
+     * @Serializer\Groups({"publish_vacancy", "api_vacancy_details"})
+     */
+    protected $datetimeAvailable;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -275,5 +286,25 @@ class Vacancy
     public function setProviderBranch($providerBranch)
     {
         $this->providerBranch = $providerBranch;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDatetimeAvailable()
+    {
+        return $this->datetimeAvailable;
+    }
+
+    /**
+     * @param \DateTime $datetimeAvailable
+     *
+     * @return $this
+     */
+    public function setDatetimeAvailable($datetimeAvailable)
+    {
+        $this->datetimeAvailable = $datetimeAvailable;
+
+        return $this;
     }
 }
