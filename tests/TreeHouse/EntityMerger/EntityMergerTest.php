@@ -317,7 +317,13 @@ class EntityMergerTest extends WebTestCase
         $original->setDatetimeAvailable($available);
 
         $update = new Vacancy();
-        $update->setDatetimeAvailable(new \DateTime('2015-08-15', new DateTimeZone('+00:00'))); // mind the timezone
+        // create a datetime with different timezone notation:
+        // class DateTime#1915 (3) {
+        //  public $date => string(26) "2015-05-18 00:00:00.000000"
+        //  public $timezone_type => int(1)
+        //  public $timezone => string(6) "+00:00"   <-------------- different timezone, not "UTC"
+        //}
+        $update->setDatetimeAvailable(new \DateTime('2015-08-15T00:00:00+00:00'));
 
         $expected = new Vacancy();
         $expected->setDatetimeAvailable($available);
