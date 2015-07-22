@@ -67,6 +67,7 @@ class EntityMerger
             $name = $prop->name;
             $prop->setAccessible(true);
             $value = $prop->getValue($update);
+            $originalValue = $prop->getValue($original);
 
             if (false === $mergeNullValues && is_null($value)) {
                 continue;
@@ -74,6 +75,15 @@ class EntityMerger
 
             if ( ! isset($class->associationMappings[$name])) {
                 if ( ! $class->isIdentifier($name)) {
+                    // normalize datetime and compare, if there is no change don't update, otherwise
+                    // you might get some weird timezone changes (UTC vs +00:00) which might trigger
+                    // a unneeded database update
+                    if (($originalValue instanceof \DateTime) && ($value instanceof \DateTime)) {
+                        if ($originalValue->format('c') === $value->format('c')) {
+                            continue;
+                        }
+                    }
+
                     $prop->setValue($original, $value);
                 }
             } else {
